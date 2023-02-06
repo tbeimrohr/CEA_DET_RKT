@@ -394,9 +394,9 @@ if ispc()
         fileparts(which(mfilename())), file_name_base));
     
     % Wait until the output file exists
-%     while exist(cea_output_file, 'file') ~= 2
-%         pause(0.1);
-%     end
+    while exist(cea_output_file, 'file') ~= 2
+        pause(0.1);
+    end
     
     % Wait until FCEA2.exe is done with the output file
     temp = fopen(cea_output_file, 'a+');

@@ -131,10 +131,17 @@ if isKey(inp_cpy, 'pip') && ~isempty(inp_cpy('pip'))
     ratios = inp_cpy('pip');
 end
 
-values = {
-    inp_cpy('p'),
-    inp_cpy('o/f'),
-    ratios};
+if isKey(inp_cpy, 'o/f')
+    values = {
+        inp_cpy('p'),
+        inp_cpy('o/f'),
+        ratios};
+elseif isKey(inp_cpy, 'phi')
+    values = {
+        inp_cpy('p'),
+        inp_cpy('phi'),
+        ratios};
+end
 
 
 %% Preprocess some file name string manipulation
@@ -183,7 +190,12 @@ for i = 1:length(ps)
             
             % Set the subproblem inputs
             inp_cpy('p') = ps{i};
-            inp_cpy('o/f') = ofs{j};
+            if isKey(inp_cpy, 'o/f')
+                inp_cpy('o/f') = ofs{j};
+            elseif isKey(inp_cpy, 'phi')
+                inp_cpy('phi') = ofs{j};
+            end
+            
             if no_ratios
                 % Account for the case where no ratios are given
                 inp_cpy('pip') = [];

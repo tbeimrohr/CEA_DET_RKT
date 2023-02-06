@@ -5,7 +5,6 @@ clear
 clc
 
 % Change this variable to true to rerun CEA instead of using saved values
-%addpath('C:\path\to\cea\', '-end');
 addpath('C:\Users\Thomas\Desktop\CEA_DET_RKT', '-end');
 savepath();
 fclose all;
@@ -25,7 +24,7 @@ inp('prob') = 'detonation';
 inp('type') = 'det';              % Sets the type of CEA calculation
 inp('p') = pressure;                % Chamber pressure
 inp('p_unit') = 'psi';              % Chamber pressure units
-inp('o/f') = 2;               % Mixture ratio
+inp('phi') = 1;               % Mixture ratio
 inp('fuel') = 'CH4';             % Fuel name from thermo.inp
 inp('fuel_t') = 298;                % Fuel inlet temperature
 inp('fuel_wt%') = 100;
@@ -50,10 +49,20 @@ end
 % be used to reduce the number of dimensions appropriately. Read the notes
 % at the top of cea_rocket_read.m for more details.
 temp = squeeze(data_det('T'))';
+det_mach = squeeze(data_det('DET_MACH'))';
 
 figure(1)
+subplot(1,2,1)
 plot(pressure,temp)
-title({'Detonation Test Run','H2O2 & CH4'})
+sgtitle({'Detonation Test Run','H2O2 & CH4'})
 xlabel('Initial Pressure [psi]')
 ylabel('Temperature of Burned Gas [K]')
 grid on
+
+subplot(1,2,2)
+plot(pressure,det_mach)
+xlabel('Initial Pressure [psi]')
+ylabel('Mach of Detonation Wave [K]')
+grid on
+
+set(gcf,'Position',[100 100 1000 400])
