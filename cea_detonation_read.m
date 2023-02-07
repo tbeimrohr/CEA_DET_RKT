@@ -38,7 +38,7 @@ function [data] = cea_detonation_read(file_name, data)
 
 % Loop through every line of the file
 fileID = fopen(file_name, 'r');
-if fgetl(fileID) == -1
+if fileID == -1
     error('Can''t open file %s', file_name)
 end
 % initialize variables from CEA
@@ -98,23 +98,42 @@ while ischar(line)
         
     elseif startsWith2(line, '(SEE NOTE)')
         line2 = fgetl(fileID); 
-        line3 = fgetl(fileID); 
-        if startsWith2(line2, ' FUEL') && startsWith2(line3, ' OXIDANT')
+        if startsWith2(line2, ' FUEL')
             % Get the fuels
+            line_next = line2;
+            while startsWith2(line_next, ' FUEL')
             fuel_index = size(fuel, 1) + 1;
-            fuel_split = strsplit(strtrim(line2(length(' FUEL '):end)));
+            fuel_split = strsplit(strtrim(line_next(length(' FUEL '):end)));
             fuel{fuel_index} = fuel_split{1};
             fuel_wt(fuel_index) = str2num(fuel_split{2});
             fuel_energy(fuel_index) = str2num(fuel_split{3}) * 1000;
             fuel_T(fuel_index) = str2num(fuel_split{4});
+            fuel_index = fuel_index + 1;
+            line_next = fgetl(fileID);
+            end
 
             % Get the oxidants
+            while startsWith2(line_next, ' OXIDANT')
             ox_index = size(ox, 1) + 1;
-            ox_split = strsplit(strtrim(line3(length(' OXIDANT '):end)));
+            ox_split = strsplit(strtrim(line_next(length(' OXIDANT '):end)));
             ox{ox_index} = ox_split{1};
             ox_wt(ox_index) = str2num(ox_split{2});
             ox_energy(ox_index) = str2num(ox_split{3}) * 1000;
             ox_T(ox_index) = str2num(ox_split{4});
+            line_next = fgetl(fileID);
+            end
+        elseif startsWith2(line2, ' OXIDANT')
+            % Get the oxidants
+            line_next = line2;
+            while startsWith2(line_next, ' OXIDANT')
+            ox_index = size(ox, 1) + 1;
+            ox_split = strsplit(strtrim(line_next(length(' OXIDANT '):end)));
+            ox{ox_index} = ox_split{1};
+            ox_wt(ox_index) = str2num(ox_split{2});
+            ox_energy(ox_index) = str2num(ox_split{3}) * 1000;
+            ox_T(ox_index) = str2num(ox_split{4});
+            line_next = fgetl(fileID);
+            end
         else
             ox_index = size(ox, 1) + 1;
             ox_split = strsplit(strtrim(line2));
@@ -306,25 +325,25 @@ if ~isKey(data, map('type'))
 end
 
 % Adjust and insert the new values into the data_type variable
-int_val = map('P1');
-map('P1') = int_val(~isnan(map('P1')));
+int_val = map('T1');
+map('T1') = int_val(~isnan(map('T1')));
 data_type = data(map('type'));
 map_keys = union(keys(map), keys(data_type));
 key_blacklist = {'%fuel', 'fuel_wt', 'fuel_energy', 'fuel_t', 'ox_wt','ox_energy', 'ox_t', 'o/f', 'type','fuel','ox', 'phi', 'r'};
 
 new_P1_row = false;
-if ~isKey(data_type, 'P1')
-    data_type('P1') = [];
+if ~isKey(data_type, 'T1')
+    data_type('T1') = [];
 end
-P1_index = length(map('P1'))+1;
-data_type_P1 = data_type('P1');
+P1_index = length(map('T1'))+1;
+data_type_P1 = data_type('T1');
 if isempty(data_type_P1)
-    data_type_P1 = map('P1');
+    data_type_P1 = map('T1');
 elseif P1_index > length(data_type_P1)
-    data_type_P1 = [data_type_P1(1:P1_index-1), map('P1'), data_type_P1(P1_index:end)];
+    data_type_P1 = [data_type_P1(1:P1_index-1), map('T1'), data_type_P1(P1_index:end)];
     new_P1_row = true;
 end
-data_type('P1') = data_type_P1;
+data_type('T1') = data_type_P1;
 
 for i = 1:length(map_keys)
     key = map_keys{i};
@@ -337,13 +356,13 @@ for i = 1:length(map_keys)
         % happening with molar concentrations. Fix this by adding
         % an array of zeros according to the size of the
         % ratio_type.
-        map(key) = zeros(1, length(map('P1')));
+        map(key) = zeros(1, length(map('T1')));
     end
     if ~isvector(map(key)) || iscell(map(key)) ...
-            || length(map(key)) ~= length(map('P1'))
+            || length(map(key)) ~= length(map('T1'))
         if isnumeric(map(key))
             if isempty(map(key))
-                map(key) = zeros(1, length(map('P1')));
+                map(key) = zeros(1, length(map('T1')));
             else
                 int_val = map(key);
                 map(key) = int_val(~isnan(map(key)));
@@ -358,7 +377,8 @@ for i = 1:length(map_keys)
         % here. If a molar concentration isn't in the first run,
         % but is in subsequent runs, it gets dealt with in the else
         % statement.
-        vals3d = zeros(1, 1, length(map('P1')));
+
+        vals3d = zeros(1, 1, length(map('T1')));
         vals3d(1, 1, :) = map(key);
     else
         if ~isKey(data_type, key)
@@ -394,7 +414,7 @@ for i = 1:length(map_keys)
 
         % Insert the ratio_type rows
         vals3d_original_size = size(vals3d, 3);
-        vals3d = cat(3, vals3d, zeros(size(vals3d, 1), size(vals3d, 2), length(map('P1'))));
+        vals3d = cat(3, vals3d, zeros(size(vals3d, 1), size(vals3d, 2), length(map('T1'))));
         vals3d(1, 1, vals3d_original_size+1:end) = map(key);
     end
     data_type(key) = vals3d;
