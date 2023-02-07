@@ -87,7 +87,7 @@ inp_cpy = [inp; containers.Map()];
 
 
 %% Insert an O/F of 0 if none is specified (monopropellant)
-if ~isKey(inp_cpy, 'o/f') && ~isKey(inp_cpy, 'phi')
+if ~isKey(inp_cpy, 'o/f') && ~isKey(inp_cpy, 'phi') && ~isKey(inp_cpy, '%f')
     if isKey(inp_cpy, 'fuel') && ~isempty(inp_cpy('fuel')) ...
             && isKey(inp_cpy, 'ox') && ~isempty(inp_cpy('ox'))
         fprintf('Bipropellant operation requires an O/F or phi\n');
@@ -140,6 +140,11 @@ elseif isKey(inp_cpy, 'phi')
     values = {
         inp_cpy('p'),
         inp_cpy('phi'),
+        ratios};
+elseif isKey(inp_cpy, '%f')
+    values = {
+        inp_cpy('p'),
+        inp_cpy('%f'),
         ratios};
 end
 
@@ -194,6 +199,8 @@ for i = 1:length(ps)
                 inp_cpy('o/f') = ofs{j};
             elseif isKey(inp_cpy, 'phi')
                 inp_cpy('phi') = ofs{j};
+            elseif isKey(inp_cpy, '%f')
+                inp_cpy('%f') = ofs{j};
             end
             
             if no_ratios

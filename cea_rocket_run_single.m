@@ -188,7 +188,7 @@ if isKey(inp, 'phi') && ~isempty(inp('phi'))
 end
 
 % Print a warning if neither o/f or phi are set
-if ~ratio_set
+if ~ratio_set && ~isKey(inp, '%f')
     fprintf(strcat('WARNING: Neither o/f nor phi are set.', ...
         ' This better be a monopropellant rocket.\n'));
 end
@@ -371,6 +371,7 @@ end
 
 
 %% Print output related stuff
+% fprintf(fileID, 'only ALF ALF3 HF H2 C(gr)\n');
 fprintf(fileID, 'outp trans\n'); %massf
 fprintf(fileID, 'end\n');
 
